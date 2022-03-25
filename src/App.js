@@ -12,7 +12,6 @@ export const ACTIONS = {
 
 function reducer(state, { type, payload }) {
   switch (type) {
-
     case ACTIONS.ADD_DIGIT:
       if (state.overwrite) {
         return {
@@ -35,10 +34,11 @@ function reducer(state, { type, payload }) {
         currentOperand: `${state.currentOperand || ""}${payload.digit}`
       }
 
-    case ACTIONS.CLEAR:
-      return {}
-
     case ACTIONS.CHOOSE_OPERATION:
+      if (state.currentOperand === Number.POSITIVE_INFINITY) {
+        return {};
+      }
+
       if (state.currentOperand == null && state.previousOperand == null) {
         return state;
       }
@@ -66,18 +66,8 @@ function reducer(state, { type, payload }) {
         currentOperand: null,
       }
 
-    case ACTIONS.EVALUATE:
-      if (state.operation == null || state.currentOperand == null || state.previousOperand == null) {
-        return state;
-      }
-
-      return {
-        ...state,
-        overwrite: true,
-        previousOperand: null,
-        operation: null,
-        currentOperand: evaluate(state),
-      }
+    case ACTIONS.CLEAR:
+      return {}
 
     case ACTIONS.DELETE_DIGIT:
       if (state.overwrite) {
@@ -102,6 +92,19 @@ function reducer(state, { type, payload }) {
         ...state,
         currentOperand: state.currentOperand.slice(0, -1),
       }
+    
+    case ACTIONS.EVALUATE:
+      if (state.operation == null || state.currentOperand == null || state.previousOperand == null) {
+        return state;
+      }
+
+      return {
+        ...state,
+        overwrite: true,
+        previousOperand: null,
+        operation: null,
+        currentOperand: evaluate(state),
+      }
   }
 }
 
@@ -114,7 +117,7 @@ function evaluate({ currentOperand, previousOperand, operation }) {
   }
 
   let computation = "";
-  
+
   switch (operation) {
     case "+":
       computation = prev + current;
@@ -142,7 +145,7 @@ function formatOperand(operand) {
   }
 
   const [integer, decimal] = operand.split('.');
-  
+
   if (decimal == null) {
     return INTEGER_FORMATTER.format(integer);
   }
@@ -174,10 +177,16 @@ function App() {
         AC
       </button>
 
-      <button onClick={ () => dispatch({ type: ACTIONS.DELETE_DIGIT })}>DEL</button>
-
+      <button onClick={() => dispatch({ type: ACTIONS.DELETE_DIGIT })}>DEL</button>
+      {/* 
       <OperationButton
         operation="&#247;"
+        dispatch={dispatch}
+      /> */}
+
+
+      <OperationButton
+        operation="divide"
         dispatch={dispatch}
       />
 
@@ -218,7 +227,6 @@ function App() {
 
       <OperationButton
         operation="+"
-        digit="+"
         dispatch={dispatch}
       />
 
